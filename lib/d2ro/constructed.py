@@ -86,14 +86,7 @@ class Constructed:
                 print(f'--- {self}\n+++ {other}')
 
             own_val = self[key]
-            if isinstance(self, GameData) and key in ('slots', 'header'):
-                if key == 'slots':
-                    for own, other_slot in zip(self.slots, other.slots):
-                        own.diff(other_slot, max_len=max_len, byte_diff=byte_diff, keys=keys, per_line=per_line)
-                elif key == 'header':
-                    h_keys = set(keys).difference({'header'}) if keys else None
-                    self.header.diff(other.header, max_len=max_len, byte_diff=byte_diff, keys=h_keys, per_line=per_line)
-            elif not byte_diff and own_val != own_raw and not isinstance(own_val, (float, int, str)):
+            if not byte_diff and own_val != own_raw and not isinstance(own_val, (float, int, str)):
                 print(colored(f'@@ {key} @@', 6))
                 pseudo_json_diff(own_val, other[key], key in row_keys, key)
             elif max_len and isinstance(own_val, bytes) and len(own_raw) > max_len:
