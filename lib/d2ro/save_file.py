@@ -34,6 +34,9 @@ class CTLOFile(Constructed, construct=CtloStruct()):
         super().__init__(data)
         self._path = path
 
+    def __repr__(self) -> str:
+        return f'<{self.__class__.__name__}[{self._path.name}]>'
+
     @classmethod
     def load(cls, path: Union[str, Path]) -> 'CTLOFile':
         path = Path(path).expanduser()
