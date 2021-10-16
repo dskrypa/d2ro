@@ -9,6 +9,7 @@ from functools import reduce
 from operator import xor
 from typing import Union, Optional, Collection
 
+from construct import Struct, Bytes
 from construct.lib.containers import ListContainer, Container
 
 from .diff import pseudo_json_diff, unified_byte_line_diff
@@ -16,6 +17,66 @@ from .utils import to_hex_and_str, pseudo_json, colored, cached_classproperty, w
 
 __all__ = ['Constructed']
 log = logging.getLogger(__name__)
+
+
+class Field:
+    def __init__(self, offset: int, struct):
+        self.offset = offset
+        self.struct = struct
+        self.name = None
+
+    def __set_name__(self, owner, name):
+        self.name = name
+
+
+class SparseStruct:
+    size: int
+    align: int
+    fields: dict[int, tuple[str, Struct]]
+
+    def __init_subclass__(cls, size: int, align: int = 4):  # noqa
+        cls.size = size
+        cls.align = align
+        cls.fields = {
+            attr.offset: (attr.name, attr.struct) for name in dir(cls) if isinstance(attr := getattr(cls, name), Field)
+        }
+
+    def __new__(cls):
+        struct_dict = {}
+        pos = 0
+        for offset, (name, struct) in sorted(cls.fields.items()):
+            if pos != offset:
+                pos = cls._fill_in(struct_dict, pos, offset)
+
+            struct_dict[name] = struct
+            pos += struct.sizeof()
+
+        if pos < cls.size:
+            cls._fill_in(struct_dict, pos, cls.size)
+
+        # for k, v in struct_dict.items():
+        #     log.debug(f'{k} = {v}, {v.sizeof()}')
+
+        struct = Struct(*(k / v for k, v in struct_dict.items()))
+        assert struct.sizeof() == cls.size
+        return struct
+
+    @classmethod
+    def _fill_in(cls, struct_dict, pos: int, offset: int):
+        fill = offset - pos
+        if fill > cls.align:
+            if fill % cls.align != 0:
+                partial = fill - (fill // cls.align * cls.align)
+                struct_dict[f'_unk_{pos}'] = Bytes(partial)
+                pos += partial
+
+            while pos < offset:
+                struct_dict[f'_unk_{pos}'] = Bytes(cls.align)
+                pos += cls.align
+        else:
+            struct_dict[f'_unk_{pos}'] = Bytes(fill)
+            pos = offset
+        return pos
 
 
 class Constructed:

@@ -9,33 +9,25 @@ import shutil
 from pathlib import Path
 from typing import Union
 
-from construct import Struct, Bytes, Int32ul
-# from construct import Int8ul, Int32sl, Float64l, Float32l, PaddedString
+from construct import Int32ul
+# from construct import Struct, Bytes, Int8ul, Int32sl, Float64l, Float32l, PaddedString
 # from construct import Enum, FlagsEnum, Sequence, BitStruct, Flag, BitsSwapped, ExprValidator, RawCopy
 
 # from .adapters import Checksum
-from .constructed import Constructed
+from .constructed import Constructed, Field, SparseStruct
 from .utils import unique_path
 
-__all__ = ['CTLOFile', 'CTLOStruct']
+__all__ = ['CTLOFile', 'CtloStruct']
 log = logging.getLogger(__name__)
 
 
-# region Save File
-CTLOStruct = Struct(
-    _unk0=Bytes(12),
-    changed_0=Int32ul,  # 4
-    _unk1=Bytes(44),
-    changed_1=Int32ul,  # 4
-    _unk2=Bytes(114),
-    changed_2=Int32ul,  # 4
-    changed_3=Int32ul,  # 4
-    _unk3=Bytes(714),
-)
-# endregion
+class CtloStruct(SparseStruct, size=900, align=4):
+    changed_0 = Field(12, Int32ul)
+    changed_1 = Field(60, Int32ul)
+    changed_2 = Field(180, Int32ul)
 
 
-class CTLOFile(Constructed, construct=CTLOStruct):
+class CTLOFile(Constructed, construct=CtloStruct()):
     """Represents a ctlo file"""
 
     def __init__(self, data: bytes, path: Path = None):
