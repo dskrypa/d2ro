@@ -1,3 +1,3 @@
-Diablo 2 Resurrected - Online Save File Parser
-==============================================
+Diablo 2 Remastered - Online Save File Parser
+=============================================
 
