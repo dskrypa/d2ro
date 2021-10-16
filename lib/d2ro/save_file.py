@@ -24,10 +24,13 @@ log = logging.getLogger(__name__)
 # region Save File
 CTLOStruct = Struct(
     _unk0=Bytes(12),
-    seed_candidate_0=Int32ul,
-    _unk1=Bytes(162),
-    seed_candidate_1=Int32ul,
-    _unk2=Bytes(712),
+    changed_0=Int32ul,  # 4
+    _unk1=Bytes(44),
+    changed_1=Int32ul,  # 4
+    _unk2=Bytes(114),
+    changed_2=Int32ul,  # 4
+    changed_3=Int32ul,  # 4
+    _unk3=Bytes(714),
 )
 # endregion
 
